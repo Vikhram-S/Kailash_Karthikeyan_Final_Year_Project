@@ -12,7 +12,7 @@ SUBTEXT = "#9CA3AF"
 
 def inject_theme():
     st.set_page_config(
-        page_title="Pro Face Detection Studio",
+        page_title="AI powered smart door bell using Tiny ML",
         page_icon="🧠",
         layout="wide",
         initial_sidebar_state="expanded",
@@ -21,19 +21,34 @@ def inject_theme():
     st.markdown(
         f"""
         <style>
+        /* Full-page background */
         .stApp {{
             background: radial-gradient(circle at top left, #1d4ed8 0, {BACKGROUND} 45%);
             color: {TEXT};
             font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
         }}
+
+        /* Remove the default white header bar */
+        [data-testid="stHeader"] {{
+            background: transparent;
+            box-shadow: none;
+        }}
+        [data-testid="stToolbar"] {{
+            background: transparent;
+        }}
+
+        /* Tight, centered main content like a product console */
+        .block-container {{
+            padding-top: 0.75rem;
+            padding-bottom: 2rem;
+            max-width: 1120px;
+        }}
+
         section[data-testid="stSidebar"] {{
             background-color: {SURFACE};
             border-right: 1px solid rgba(148, 163, 184, 0.25);
         }}
-        .block-container {{
-            padding-top: 1.5rem;
-            padding-bottom: 2rem;
-        }}
+
         .metric-card {{
             background: linear-gradient(135deg, #020617 0%, #111827 50%, #0f172a 100%);
             border-radius: 18px;

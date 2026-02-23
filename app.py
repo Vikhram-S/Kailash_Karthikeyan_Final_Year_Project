@@ -20,16 +20,28 @@ def load_image_file(uploaded_file) -> Optional[np.ndarray]:
 
 
 def run_image_mode(detector: FaceDetector):
-    tabs = st.tabs(["Upload Image", "Insights"])
+    tabs = st.tabs(["Workspace", "Insights"])
     with tabs[0]:
+        st.markdown(
+            """
+            <div style="margin-bottom: 0.75rem; font-size: 0.9rem; color: #9CA3AF;">
+                <strong>Tip</strong>: On mobile, use landscape mode for a wider preview.
+            </div>
+            """,
+            unsafe_allow_html=True,
+        )
+
         uploaded_files = st.file_uploader(
-            "Drop one or more images here",
+            "Upload images for face detection",
             type=["jpg", "jpeg", "png"],
             accept_multiple_files=True,
         )
 
         if not uploaded_files:
-            st.info("Upload at least one image to begin.")
+            st.info(
+                "Upload one or more images to get started. "
+                "On mobile, tap here to open your gallery."
+            )
             return
 
         total_faces = 0
@@ -58,7 +70,7 @@ def run_image_mode(detector: FaceDetector):
                 }
             )
 
-        col1, col2, col3 = st.columns(3)
+        col1, col2, col3 = st.columns([1, 1, 1])
         with col1:
             metric_card("Total Faces", str(total_faces), "Across all images")
         with col2:
@@ -67,10 +79,13 @@ def run_image_mode(detector: FaceDetector):
         with col3:
             metric_card("Images Processed", str(len(results)), "Batch size")
 
-        st.markdown("---")
+        st.markdown("<hr style='opacity:0.2;margin:1.25rem 0;'/>", unsafe_allow_html=True)
         for r in results:
-            st.markdown(f"#### {r['name']}")
-            c1, c2 = st.columns([2, 1])
+            st.markdown(
+                f"<h4 style='margin-bottom:0.25rem;'>{r['name']}</h4>",
+                unsafe_allow_html=True,
+            )
+            c1, c2 = st.columns([3, 2])
             with c1:
                 st.image(
                     cv2.cvtColor(r["image"], cv2.COLOR_BGR2RGB),
@@ -84,9 +99,8 @@ def run_image_mode(detector: FaceDetector):
         st.subheader("How to use in production")
         st.markdown(
             """
-            - This UI is suitable as an internal tool.
-            - For production APIs, wrap `FaceDetector.detect_faces` into a FastAPI endpoint.
-
+            - Use this as an internal tool or demo dashboard.
+            - For production APIs, wrap `FaceDetector.detect_faces` in a FastAPI or Flask endpoint.
             """
         )
 
@@ -124,18 +138,28 @@ def run_webcam_mode(detector: FaceDetector):
 def main():
     inject_theme()
 
-    left, right = st.columns([3, 2])
-    with left:
+    header = st.container()
+    with header:
         st.markdown(
-            "<h2 style='margin-bottom:0.1rem;'>Pro Face Detection Studio</h2>",
+            """
+            <div style="text-align:center; padding: 0.5rem 0 0.75rem;">
+                <div style="font-size: 1.8rem; font-weight: 650; letter-spacing: 0.03em;">
+                    Pro Face Detection Studio
+                </div>
+                <div style="font-size: 0.9rem; margin-top: 0.25rem; color:#9CA3AF;">
+                    Real‑time, multi‑device face detection for images & webcam.
+                </div>
+            </div>
+            """,
             unsafe_allow_html=True,
         )
-        st.markdown(
-            "<span style='color:#9CA3AF;'>Ultra-fast, production-grade face detection for images & webcam.</span>",
-            unsafe_allow_html=True,
-        )
-    with right:
-        mode = st.toggle("Live webcam mode", value=False)
+
+    mode = st.segmented_control(
+        "Mode",
+        ["Images", "Webcam"],
+        default="Images",
+        label_visibility="collapsed",
+    )
 
     st.sidebar.title("Controls")
     st.sidebar.caption(
@@ -144,7 +168,7 @@ def main():
     )
 
     conf = st.sidebar.slider(
-        "Minimum confidence",
+        "Minimum confidence (only for advanced models)",
         0.3,
         0.9,
         0.6,
@@ -159,7 +183,7 @@ def main():
 
     detector = FaceDetector(min_confidence=conf, model_selection=model_sel)
 
-    if mode:
+    if mode == "Webcam":
         run_webcam_mode(detector)
     else:
         run_image_mode(detector)
