@@ -144,7 +144,7 @@ def main():
             """
             <div style="text-align:center; padding: 0.5rem 0 0.75rem;">
                 <div style="font-size: 1.8rem; font-weight: 650; letter-spacing: 0.03em;">
-                    Pro Face Detection Studio
+                    AI powered smart door bell Security System using Tiny ML
                 </div>
                 <div style="font-size: 0.9rem; margin-top: 0.25rem; color:#9CA3AF;">
                     Real‑time, multi‑device face detection for images & webcam.
