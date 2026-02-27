@@ -60,4 +60,3 @@ class FaceDetector:
                 2,
             )
         return out
-
