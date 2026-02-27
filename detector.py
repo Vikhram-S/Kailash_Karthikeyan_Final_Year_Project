@@ -1,7 +1,7 @@
 import cv2
 import numpy as np
 from dataclasses import dataclass
-from typing import List, Tuple
+from typing import List, Tuple, Optional
 
 
 @dataclass
@@ -39,15 +39,20 @@ class FaceDetector:
         return boxes
 
     @staticmethod
-    def draw_detections(image_bgr: np.ndarray, boxes: List[FaceBox]) -> np.ndarray:
+    def draw_detections(
+        image_bgr: np.ndarray,
+        boxes: List[FaceBox],
+        label: Optional[str] = None,
+    ) -> np.ndarray:
+        """Draw detected face boxes with an optional label (e.g. person's name)."""
         out = image_bgr.copy()
         for idx, fb in enumerate(boxes, start=1):
             x, y, w, h = fb.box
             cv2.rectangle(out, (x, y), (x + w, y + h), (0, 255, 0), 2)
-            label = f"Face {idx}"
+            text = label if label else f"Face {idx}"
             cv2.putText(
                 out,
-                label,
+                text,
                 (x, max(20, y - 10)),
                 cv2.FONT_HERSHEY_SIMPLEX,
                 0.6,

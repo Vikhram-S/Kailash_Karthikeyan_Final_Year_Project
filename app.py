@@ -1,4 +1,5 @@
 import io
+import os
 import time
 from typing import Optional
 
@@ -17,6 +18,26 @@ def load_image_file(uploaded_file) -> Optional[np.ndarray]:
     bytes_data = uploaded_file.read()
     pil = Image.open(io.BytesIO(bytes_data)).convert("RGB")
     return cv2.cvtColor(np.array(pil), cv2.COLOR_RGB2BGR)
+
+
+def maybe_resize(image_bgr: np.ndarray, max_size: int = 1024) -> np.ndarray:
+    """Downscale very large images to keep inference fast and avoid timeouts."""
+    h, w = image_bgr.shape[:2]
+    longest = max(h, w)
+    if longest <= max_size:
+        return image_bgr
+
+    scale = max_size / float(longest)
+    new_w, new_h = int(w * scale), int(h * scale)
+    return cv2.resize(image_bgr, (new_w, new_h), interpolation=cv2.INTER_AREA)
+
+
+def name_from_filename(filename: str) -> str:
+    """Extract a display name from an uploaded filename."""
+    base = os.path.splitext(os.path.basename(filename))[0]
+    # Replace common separators and title-case
+    base = base.replace("_", " ").replace("-", " ").strip()
+    return base.title() if base else "Unknown"
 
 
 def run_image_mode(detector: FaceDetector):
@@ -53,9 +74,12 @@ def run_image_mode(detector: FaceDetector):
             if img_bgr is None:
                 continue
 
+            img_bgr = maybe_resize(img_bgr)
+            person_name = name_from_filename(f.name)
+
             t0 = time.time()
             boxes = detector.detect_faces(img_bgr)
-            annotated = detector.draw_detections(img_bgr, boxes)
+            annotated = detector.draw_detections(img_bgr, boxes, label=person_name)
             dt = (time.time() - t0) * 1000.0
 
             total_faces += len(boxes)
@@ -64,6 +88,7 @@ def run_image_mode(detector: FaceDetector):
             results.append(
                 {
                     "name": f.name,
+                    "label": person_name,
                     "faces": len(boxes),
                     "latency_ms": dt,
                     "image": annotated,
@@ -89,7 +114,7 @@ def run_image_mode(detector: FaceDetector):
             with c1:
                 st.image(
                     cv2.cvtColor(r["image"], cv2.COLOR_BGR2RGB),
-                    caption=f"{r['faces']} faces detected",
+                    caption=f"{r['faces']} faces detected - {r['label']}",
                     use_column_width=True,
                 )
             with c2:
@@ -117,6 +142,7 @@ def run_webcam_mode(detector: FaceDetector):
         st.error("Could not read camera frame.")
         return
 
+    image_bgr = maybe_resize(image_bgr)
     t0 = time.time()
     boxes = detector.detect_faces(image_bgr)
     annotated = detector.draw_detections(image_bgr, boxes)
@@ -181,7 +207,7 @@ def main():
         format_func=lambda x: "Short-range (selfies)" if x == 0 else "Full-range",
     )
 
-    detector = FaceDetector(min_confidence=conf, model_selection=model_sel)
+    detector = get_detector(conf, model_sel)
 
     if mode == "Webcam":
         run_webcam_mode(detector)
@@ -189,6 +215,10 @@ def main():
         run_image_mode(detector)
 
 
+@st.cache_resource(show_spinner=False)
+def get_detector(conf: float, model_sel: int) -> FaceDetector:
+    """Create and cache the face detector so it's not reloaded on every rerun."""
+    return FaceDetector(min_confidence=conf, model_selection=model_sel)
 if __name__ == "__main__":
     main()
 
