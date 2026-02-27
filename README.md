@@ -1,6 +1,5 @@
 # AI powered smart door bell Security System using Tiny ML
 
-**English**  
 Modern, pro-level Streamlit app for face detection using MediaPipe + OpenCV.  
 Supports image uploads and webcam snapshots with fast, accurate face bounding boxes.
 
