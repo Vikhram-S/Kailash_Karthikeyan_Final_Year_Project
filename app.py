@@ -79,7 +79,16 @@ def run_image_mode(detector: FaceDetector):
 
             t0 = time.time()
             boxes = detector.detect_faces(img_bgr)
-            annotated = detector.draw_detections(img_bgr, boxes, label=person_name)
+            # Compatible with older deployments that don't accept `label` arg
+            try:
+                annotated = detector.draw_detections(
+                    img_bgr,
+                    boxes,
+                    person_name,  # positional to avoid keyword issues
+                )
+            except TypeError:
+                # Fallback: draw without name if remote code is older
+                annotated = detector.draw_detections(img_bgr, boxes)
             dt = (time.time() - t0) * 1000.0
 
             total_faces += len(boxes)
