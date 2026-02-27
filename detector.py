@@ -31,6 +31,7 @@ class FaceDetector:
             minSize=(40, 40),
         )
 
+        
         boxes: List[FaceBox] = []
         # Haar cascades don't give a probability, so we just report 1.0
         for (x, y, w, h) in faces:
